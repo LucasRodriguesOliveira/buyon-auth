@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package auth;
+
+service AuthService {
+  rpc Login (LoginRequest) returns (LoginResponse);
+  rpc Register (RegisterRequest) returns (RegisterResponse);
+}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  string token = 1;
+}
+
+message RegisterRequest {
+  string firstname = 1;
+  string lastname = 2;
+  string email = 3;
+  string password = 4;
+}
+
+message RegisterResponse {
+  string token = 1;
+}
+
+service UserService {
+  rpc Create (CreateUserDto) returns (User);
+  rpc List (ListUserRequest) returns (ListUserPresenter);
+  rpc FindById (FindUserByIdDto) returns (User);
+  rpc Update (UpdateUserByIdRequest) returns (User);
+  rpc Delete (DeleteUserByIdRequest) returns (User);
+}
+
+message User {
+  string id = 1;
+  string firstname = 2;
+  string lastname = 3;
+  string email = 4;
+  bool active = 5;
+  google.protobuf.Timestamp createdAt = 6;
+  google.protobuf.Timestamp updatedAt = 7;
+}
+
+message CreateUserDto {
+  string firstname = 1;
+  string lastname = 2;
+  string email = 3;
+  string password = 4;
+}
+
+message ListUserRequest {
+  string id = 1;
+}
+
+message ListUserPresenter {
+  repeated User users = 1;
+}
+
+message FindUserByIdDto {
+  string id = 1;
+}
+
+message UpdateUserByIdDto {
+  string firstname = 1;
+  string lastname = 2;
+  string email = 3;
+  string password = 4;
+  bool active = 5;
+}
+
+message UpdateUserByIdRequest {
+  string id = 1;
+  UpdateUserByIdDto userData = 2;
+}
+
+message DeleteUserByIdRequest {
+  string id = 1;
+}
