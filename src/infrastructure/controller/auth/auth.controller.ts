@@ -3,12 +3,16 @@ import { LoginProxy } from 'src/infrastructure/usecase-proxy/proxies/auth/login-
 import { LoginUseCase } from 'src/usecases/auth/login.usecase';
 import { GrpcMethod } from '@nestjs/microservices';
 import { GRPCService } from 'src/infrastructure/grpc/service.enum';
-import { LoginResponse } from './presenter/login.presenter';
 import { LoginRequest } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RegisterPresenter } from './presenter/register.presenter';
 import { CreateUserProxy } from 'src/infrastructure/usecase-proxy/proxies/user/create-user.proxy';
 import { CreateUserUseCase } from 'src/usecases/user/create-user.usecase';
+import { plainToInstance } from 'class-transformer';
+import { UserPresenter } from '../user/presenter/user.presenter';
+import { Result } from 'src/domain/types/result';
+import { LoginResult } from './presenter/login.presenter';
+import { ErrorResponse } from 'src/domain/types/error.interface';
 
 @Controller('auth')
 export class AuthController {
@@ -23,11 +27,22 @@ export class AuthController {
   public async login({
     email,
     password,
-  }: LoginRequest): Promise<LoginResponse> {
-    const user = await this.loginUseCase.validateUser(email, password);
+  }: LoginRequest): Promise<Result<LoginResult, ErrorResponse>> {
+    const result = await this.loginUseCase.checkUser(email, password);
+
+    if (result.error) {
+      return {
+        error: result.error,
+      };
+    }
+
+    const token = await this.loginUseCase.login(result.value);
 
     return {
-      token: await this.loginUseCase.login(user),
+      value: {
+        token,
+        user: plainToInstance(UserPresenter, result.value),
+      },
     };
   }
 

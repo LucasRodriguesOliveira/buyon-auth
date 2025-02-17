@@ -6,6 +6,10 @@ import {
 } from 'class-transformer';
 import { UserModel } from 'src/domain/model/user.model';
 
+export interface UserResult {
+  user: UserPresenter;
+}
+
 @Exclude()
 export class UserPresenter extends UserModel {
   @Expose()
@@ -24,20 +28,10 @@ export class UserPresenter extends UserModel {
   active: boolean;
 
   @Expose()
-  @Transform(({ value }: TransformFnParams) => {
-    return {
-      seconds: (value as Date).getTime() / 1000,
-      nanos: 0,
-    };
-  })
+  @Transform(({ value }: TransformFnParams) => (value as Date).toISOString())
   createdAt: Date;
 
   @Expose()
-  @Transform(({ value }: TransformFnParams) => {
-    return {
-      seconds: (value as Date).getTime() / 1000,
-      nanos: 0,
-    };
-  })
+  @Transform(({ value }: TransformFnParams) => (value as Date).toISOString())
   updatedAt: Date;
 }

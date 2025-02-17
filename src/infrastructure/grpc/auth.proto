@@ -1,21 +1,37 @@
 syntax = "proto3";
 
-import "google/protobuf/timestamp.proto";
-
 package auth;
 
-service AuthService {
-  rpc Login (LoginRequest) returns (LoginResponse);
-  rpc Register (RegisterRequest) returns (RegisterResponse);
+message Error {
+  string code = 1;
+  string message = 2;
+}
+
+message User {
+  string id = 1;
+  string firstname = 2;
+  string lastname = 3;
+  string email = 4;
+  bool active = 5;
+  string createdAt = 6;
+  string updatedAt = 7;
+}
+
+message AuthResult {
+  User user = 1;
+  string token = 2;
+}
+
+message AuthResponse {
+  oneof response {
+    AuthResult value = 1;
+    Error error = 2;
+  }
 }
 
 message LoginRequest {
   string email = 1;
   string password = 2;
-}
-
-message LoginResponse {
-  string token = 1;
 }
 
 message RegisterRequest {
@@ -25,26 +41,33 @@ message RegisterRequest {
   string password = 4;
 }
 
-message RegisterResponse {
-  string token = 1;
+service AuthService {
+  rpc Login (LoginRequest) returns (AuthResponse);
+  rpc Register (RegisterRequest) returns (AuthResponse);
+}
+
+message UserResult {
+  User user = 1;
+}
+
+message UserResponse {
+  oneof response {
+    UserResult value = 1;
+    Error error = 2;
+  }
+}
+
+message FindUserByEmailRequest {
+  string email = 1;
 }
 
 service UserService {
   rpc Create (CreateUserDto) returns (User);
   rpc List (ListUserRequest) returns (ListUserPresenter);
   rpc FindById (FindUserByIdDto) returns (User);
+  rpc FindByEmail (FindUserByEmailRequest) returns (UserResponse);
   rpc Update (UpdateUserByIdRequest) returns (User);
   rpc Delete (DeleteUserByIdRequest) returns (User);
-}
-
-message User {
-  string id = 1;
-  string firstname = 2;
-  string lastname = 3;
-  string email = 4;
-  bool active = 5;
-  google.protobuf.Timestamp createdAt = 6;
-  google.protobuf.Timestamp updatedAt = 7;
 }
 
 message CreateUserDto {

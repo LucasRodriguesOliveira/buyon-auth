@@ -18,7 +18,12 @@ import { FindUserDto } from './dto/find-user.dto';
 import { UpdateUserById } from './dto/update-user.dto';
 import { DeleteUserDto } from './dto/delete-user.dto';
 import { plainToInstance } from 'class-transformer';
-import { UserPresenter } from './presenter/user.presenter';
+import { UserPresenter, UserResult } from './presenter/user.presenter';
+import { FindUserByEmailDto } from './dto/find-user-by-email.dto';
+import { FindUserByEmailProxy } from 'src/infrastructure/usecase-proxy/proxies/user/find-user-by-email.proxy';
+import { FindUserByEmailUseCase } from 'src/usecases/user/find-user-by-email.usecase';
+import { Result } from 'src/domain/types/result';
+import { ErrorResponse } from 'src/domain/types/error.interface';
 
 @Controller('user')
 export class UserController {
@@ -29,6 +34,8 @@ export class UserController {
     private readonly listUsersUseCase: ListUsersUseCase,
     @Inject(FindUserByIdProxy.Token)
     private readonly findUserByIdUseCase: FindUserByIdUseCase,
+    @Inject(FindUserByEmailProxy.Token)
+    private readonly findUserByEmailUseCase: FindUserByEmailUseCase,
     @Inject(UpdateUserProxy.Token)
     private readonly updateUserUseCase: UpdateUserUseCase,
     @Inject(DeleteUserByIdProxy.Token)
@@ -56,6 +63,25 @@ export class UserController {
     const user = await this.findUserByIdUseCase.run(id);
 
     return plainToInstance(UserPresenter, user);
+  }
+
+  @GrpcMethod(GRPCService.USER)
+  public async findByEmail({
+    email,
+  }: FindUserByEmailDto): Promise<Result<UserResult, ErrorResponse>> {
+    const result = await this.findUserByEmailUseCase.run(email);
+
+    if (result.error) {
+      return {
+        error: result.error,
+      };
+    }
+
+    return {
+      value: {
+        user: plainToInstance(UserPresenter, result.value),
+      },
+    };
   }
 
   @GrpcMethod(GRPCService.USER)

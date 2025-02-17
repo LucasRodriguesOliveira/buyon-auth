@@ -3,6 +3,9 @@ import { JwtPayload } from 'src/domain/auth/jwt/jwt-payload.interface';
 import { IJwtService } from 'src/domain/auth/jwt/jwt.interface';
 import { UserModel } from 'src/domain/model/user.model';
 import { IUserRepository } from 'src/domain/repository/user-repository.interface';
+import { Result } from 'src/domain/types/result';
+import { ErrorCode } from 'src/domain/types/error-code.enum';
+import { ErrorResponse } from 'src/domain/types/error.interface';
 
 export class LoginUseCase {
   constructor(
@@ -11,29 +14,35 @@ export class LoginUseCase {
     private readonly jwtService: IJwtService,
   ) {}
 
-  public async validateUser(
+  public async checkUser(
     email: string,
     password: string,
-  ): Promise<UserModel | null> {
+  ): Promise<Result<UserModel, ErrorResponse>> {
     const user = await this.userRepository.findByEmail(email);
 
     if (!user) {
-      console.log('no user found');
-      return null;
+      return {
+        error: {
+          code: ErrorCode.USER_NOT_FOUND,
+          message: 'No user found',
+        },
+      };
     }
 
     const match = await this.cryptoService.compare(password, user.password);
 
     if (!match) {
-      console.log("password doesn't match");
-      return null;
+      return {
+        error: {
+          code: ErrorCode.WRONG_PASSWORD,
+          message: "Password doesn't match",
+        },
+      };
     }
 
-    return user;
-  }
-
-  public async validateUserJwt(email: string): Promise<UserModel> {
-    return this.userRepository.findByEmail(email);
+    return {
+      value: user,
+    };
   }
 
   public async login({ id, email }: UserModel): Promise<string> {
