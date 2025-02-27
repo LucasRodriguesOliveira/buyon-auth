@@ -57,17 +57,28 @@ message UserResponse {
   }
 }
 
+message UserListResult {
+  repeated User users = 1;
+}
+
+message UserListResponse {
+  oneof response {
+    UserListResult value = 1;
+    Error error = 2;
+  }
+}
+
 message FindUserByEmailRequest {
   string email = 1;
 }
 
 service UserService {
-  rpc Create (CreateUserDto) returns (User);
-  rpc List (ListUserRequest) returns (ListUserPresenter);
-  rpc FindById (FindUserByIdDto) returns (User);
+  rpc Create (CreateUserDto) returns (UserResponse);
+  rpc List (ListUserRequest) returns (UserListResponse);
+  rpc FindById (FindUserByIdDto) returns (UserResponse);
   rpc FindByEmail (FindUserByEmailRequest) returns (UserResponse);
-  rpc Update (UpdateUserByIdRequest) returns (User);
-  rpc Delete (DeleteUserByIdRequest) returns (User);
+  rpc Update (UpdateUserByIdRequest) returns (UserResponse);
+  rpc Delete (DeleteUserByIdRequest) returns (UserResponse);
 }
 
 message CreateUserDto {
@@ -79,10 +90,6 @@ message CreateUserDto {
 
 message ListUserRequest {
   string id = 1;
-}
-
-message ListUserPresenter {
-  repeated User users = 1;
 }
 
 message FindUserByIdDto {

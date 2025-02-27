@@ -1,7 +1,6 @@
 import { Controller, Inject } from '@nestjs/common';
 import { CreateUserProxy } from 'src/infrastructure/usecase-proxy/proxies/user/create-user.proxy';
 import { CreateUserUseCase } from 'src/usecases/user/create-user.usecase';
-import { UserModel } from 'src/domain/model/user.model';
 import { ListUsersProxy } from 'src/infrastructure/usecase-proxy/proxies/user/list-users.proxy';
 import { ListUsersUseCase } from 'src/usecases/user/list-users.usecase';
 import { FindUserByIdProxy } from 'src/infrastructure/usecase-proxy/proxies/user/find-user-by-id.proxy';
@@ -43,26 +42,58 @@ export class UserController {
   ) {}
 
   @GrpcMethod(GRPCService.USER)
-  public async create(createUserDto: CreateUserDto): Promise<UserModel> {
-    const user = await this.createUserUseCase.run(createUserDto);
+  public async create(
+    createUserDto: CreateUserDto,
+  ): Promise<Result<UserResult, ErrorResponse>> {
+    const result = await this.createUserUseCase.run(createUserDto);
 
-    return plainToInstance(UserPresenter, user);
-  }
-
-  @GrpcMethod(GRPCService.USER)
-  public async list(): Promise<ListUserPresenter> {
-    const users = await this.listUsersUseCase.run();
+    if (result?.error) {
+      return {
+        error: result.error,
+      };
+    }
 
     return {
-      users: plainToInstance(UserPresenter, users),
+      value: {
+        user: plainToInstance(UserPresenter, result.value),
+      },
     };
   }
 
   @GrpcMethod(GRPCService.USER)
-  public async findById({ id }: FindUserDto): Promise<UserModel> {
-    const user = await this.findUserByIdUseCase.run(id);
+  public async list(): Promise<Result<ListUserPresenter, ErrorResponse>> {
+    const result = await this.listUsersUseCase.run();
 
-    return plainToInstance(UserPresenter, user);
+    if (result?.error) {
+      return {
+        error: result.error,
+      };
+    }
+
+    return {
+      value: {
+        users: plainToInstance(UserPresenter, result.value),
+      },
+    };
+  }
+
+  @GrpcMethod(GRPCService.USER)
+  public async findById({
+    id,
+  }: FindUserDto): Promise<Result<UserResult, ErrorResponse>> {
+    const result = await this.findUserByIdUseCase.run(id);
+
+    if (result.error) {
+      return {
+        error: result.error,
+      };
+    }
+
+    return {
+      value: {
+        user: plainToInstance(UserPresenter, result.value),
+      },
+    };
   }
 
   @GrpcMethod(GRPCService.USER)
@@ -85,16 +116,41 @@ export class UserController {
   }
 
   @GrpcMethod(GRPCService.USER)
-  public async update({ id, userData }: UpdateUserById): Promise<UserModel> {
-    const user = await this.updateUserUseCase.run(id, userData);
+  public async update({
+    id,
+    userData,
+  }: UpdateUserById): Promise<Result<UserResult, ErrorResponse>> {
+    const result = await this.updateUserUseCase.run(id, userData);
 
-    return plainToInstance(UserPresenter, user);
+    if (result?.error) {
+      return {
+        error: result.error,
+      };
+    }
+
+    return {
+      value: {
+        user: plainToInstance(UserPresenter, result.value),
+      },
+    };
   }
 
   @GrpcMethod(GRPCService.USER)
-  public async delete({ id }: DeleteUserDto): Promise<UserModel> {
-    const user = await this.deleteUserByIdUseCase.run(id);
+  public async delete({
+    id,
+  }: DeleteUserDto): Promise<Result<UserResult, ErrorResponse>> {
+    const result = await this.deleteUserByIdUseCase.run(id);
 
-    return plainToInstance(UserPresenter, user);
+    if (result?.error) {
+      return {
+        error: result.error,
+      };
+    }
+
+    return {
+      value: {
+        user: plainToInstance(UserPresenter, result.value),
+      },
+    };
   }
 }

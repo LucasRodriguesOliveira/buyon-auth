@@ -5,14 +5,11 @@ import { GrpcMethod } from '@nestjs/microservices';
 import { GRPCService } from 'src/infrastructure/grpc/service.enum';
 import { LoginRequest } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { RegisterPresenter } from './presenter/register.presenter';
 import { CreateUserProxy } from 'src/infrastructure/usecase-proxy/proxies/user/create-user.proxy';
 import { CreateUserUseCase } from 'src/usecases/user/create-user.usecase';
 import { plainToInstance } from 'class-transformer';
 import { UserPresenter } from '../user/presenter/user.presenter';
-import { Result } from 'src/domain/types/result';
-import { LoginResult } from './presenter/login.presenter';
-import { ErrorResponse } from 'src/domain/types/error.interface';
+import { AuthResponse } from './presenter/auth-response.presenter';
 
 @Controller('auth')
 export class AuthController {
@@ -24,10 +21,7 @@ export class AuthController {
   ) {}
 
   @GrpcMethod(GRPCService.AUTH)
-  public async login({
-    email,
-    password,
-  }: LoginRequest): Promise<Result<LoginResult, ErrorResponse>> {
+  public async login({ email, password }: LoginRequest): Promise<AuthResponse> {
     const result = await this.loginUseCase.checkUser(email, password);
 
     if (result.error) {
@@ -47,12 +41,22 @@ export class AuthController {
   }
 
   @GrpcMethod(GRPCService.AUTH)
-  public async register(registerDto: RegisterDto): Promise<RegisterPresenter> {
-    const user = await this.createUserUseCase.run(registerDto);
-    const token = await this.loginUseCase.login(user);
+  public async register(registerDto: RegisterDto): Promise<AuthResponse> {
+    const userResult = await this.createUserUseCase.run(registerDto);
+
+    if (userResult?.error) {
+      return {
+        error: userResult.error,
+      };
+    }
+
+    const token = await this.loginUseCase.login(userResult.value);
 
     return {
-      token,
+      value: {
+        token,
+        user: plainToInstance(UserPresenter, userResult.value),
+      },
     };
   }
 }
