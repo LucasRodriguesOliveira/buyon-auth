@@ -3,8 +3,6 @@ import { EnvMode } from '../types/mode.enum';
 
 export const APP_TOKEN = Symbol('app');
 
-const DEFAULT_API_PORT = '3000';
-
 const getSaltRounds = (
   securityLevel: string | undefined,
   mode: EnvMode,
@@ -38,11 +36,7 @@ const getSaltRounds = (
 };
 
 export const appConfig = (): { app: AppConfig } => {
-  const {
-    NODE_ENV = EnvMode.DEVELOPMENT,
-    API_PORT = DEFAULT_API_PORT,
-    SECURITY_LEVEL,
-  } = process.env;
+  const { NODE_ENV = EnvMode.DEVELOPMENT, SECURITY_LEVEL } = process.env;
   let mode: EnvMode;
 
   switch (NODE_ENV) {
@@ -61,7 +55,6 @@ export const appConfig = (): { app: AppConfig } => {
 
   return {
     app: {
-      port: parseInt(API_PORT, 10),
       mode,
       user: {
         password: {
